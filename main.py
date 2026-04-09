@@ -782,7 +782,7 @@ async def show_premium_plans(callback: types.CallbackQuery, state: FSMContext):
         f"⭐ <b>Premium Plans</b>\n\n"
         f"{price_text}"
         f"💳 <b>How to Buy:</b>\n"
-        f"Contact @Dev_Afshin to purchase.\n"
+        f"Contact @Nullprotocol_X to purchase.\n"
         f"After payment, admin will activate your premium."
     )
     keyboard = [
@@ -806,7 +806,7 @@ async def buy_plan_handler(callback: types.CallbackQuery, state: FSMContext):
         "📲 <b>Payment Instructions:</b>\n"
         "1. Send payment to [UPI ID / QR code]\n"
         "2. Take a screenshot\n"
-        "3. Forward screenshot to @Dev_Afshin\n"
+        "3. Forward screenshot to @Nullprotocol_X\n"
         "4. Your premium will be activated within 24 hours\n\n"
         "Or click below to contact admin directly:"
     )
