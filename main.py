@@ -475,14 +475,10 @@ async def process_api_call(message: types.Message, api_type: str, input_data: st
             await message.reply("❌ No data found or invalid response.", parse_mode="HTML")
             return
         
-        # Send summary message (first 5 records) to user
-        await message.reply(formatted_text, parse_mode="HTML", disable_web_page_preview=True)
-        
-        # If more than 5 records, send split full text messages to user (NO files)
-        if total_records > 5:
-            full_text = generate_full_text_response(raw_data, input_data)
-            if full_text:
-                await send_long_message_in_parts(message, full_text, parse_mode=None)
+        # ✅ Always send full text (split if needed) - NO summary message
+        full_text = generate_full_text_response(raw_data, input_data)
+        if full_text:
+            await send_long_message_in_parts(message, full_text, parse_mode=None)
         
         # Log Channel Handling (sends TXT and PDF files as before)
         log_channel = LOG_CHANNELS.get(api_type)
