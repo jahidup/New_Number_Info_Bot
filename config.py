@@ -1,12 +1,14 @@
 # config.py
 # Owner and Admins
-OWNER_ID = 8584039926
-ADMIN_IDS = [8104850843]
+OWNER_ID = 8104850843
+ADMIN_IDS = [5987905091]
 
 # Force Join Channels
-CHANNELS = [-1003949242183]
+CHANNELS = [-1003090922367, -1003698567122, -1003672015073]
 CHANNEL_LINKS = [
-    "https://t.me/Neural_Backup_Hub",
+    "https://t.me/all_data_here",
+    "https://t.me/osint_lookup",
+    "https://t.me/legend_chats_osint"
 ]
 
 # Log Channel – sirf Number Lookup ke liye
@@ -25,6 +27,6 @@ APIS = {
     },
 }
 
-DEV_USERNAME = "@Dev_Afshin"
-POWERED_BY = "AFSHIN"
+DEV_USERNAME = "@Nullprotocol_X"
+POWERED_BY = "NULL PROTOCOL"
 BACKUP_CHANNEL = -1003740236326   # Apna backup channel ID yahan dalen
