@@ -303,7 +303,7 @@ def format_number_result(data, input_number):
             lines.append(f"🆔 <b>ID:</b> <code>{rec['id']}</code>")
         lines.append("")
     if len(records) > 5:
-        lines.append(f"<i>... and {len(records)-5} more records (see below)</i>")
+        lines.append(f"<i>... and {len(records)-5} more records (check attached files & messages below)</i>")
     lines.append("━━━━━━━━━━━━━━━━━━━━")
     lines.append(f"👨‍💻 <b>Developer:</b> {DEV_USERNAME}")
     lines.append(f"⚡ <b>Powered by:</b> {POWERED_BY}")
@@ -475,12 +475,53 @@ async def process_api_call(message: types.Message, api_type: str, input_data: st
             await message.reply("❌ No data found or invalid response.", parse_mode="HTML")
             return
         
-        # ✅ Always send full text (split if needed) - NO summary message
-        full_text = generate_full_text_response(raw_data, input_data)
-        if full_text:
-            await send_long_message_in_parts(message, full_text, parse_mode=None)
+        # Send summary message (first 5 records)
+        await message.reply(formatted_text, parse_mode="HTML", disable_web_page_preview=True)
         
-        # Log Channel Handling (sends TXT and PDF files as before)
+        pdf_generated = False
+        pdf_file_path = None
+        if total_records > 5:
+            # TXT file
+            txt_file = create_readable_txt_file(raw_data, api_type, input_data)
+            await message.reply_document(
+                FSInputFile(txt_file, filename=f"number_{input_data}_readable.txt"),
+                caption="📄 <b>Readable Text Format</b>\n\n<i>Full data in text file</i>",
+                parse_mode="HTML"
+            )
+            os.unlink(txt_file)
+            
+            # PDF file
+            try:
+                pdf_path = create_styled_pdf(raw_data, input_data)
+                await message.reply_document(
+                    FSInputFile(pdf_path, filename=f"Number_Report_{input_data}.pdf"),
+                    caption=f"📑 <b>Professional PDF Report</b>\n\n"
+                            f"🔢 Input: <code>{input_data}</code>\n"
+                            f"📊 Total Records: {total_records}\n\n"
+                            f"<i>Styled for easy reading</i>",
+                    parse_mode="HTML"
+                )
+                pdf_generated = True
+                pdf_file_path = pdf_path
+            except Exception as e:
+                logging.error(f"PDF generation failed: {e}")
+                with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False, encoding='utf-8') as f:
+                    json.dump(raw_data, f, indent=2)
+                    json_file = f.name
+                await message.reply_document(
+                    FSInputFile(json_file, filename=f"number_{input_data}.json"),
+                    caption="⚠️ PDF generation failed, sending raw JSON instead."
+                )
+                os.unlink(json_file)
+            
+            # Send full text in multiple messages
+            full_text = generate_full_text_response(raw_data, input_data)
+            if full_text:
+                await send_long_message_in_parts(message, full_text, parse_mode=None)
+            
+            if pdf_generated and pdf_file_path:
+                os.unlink(pdf_file_path)
+        
         log_channel = LOG_CHANNELS.get(api_type)
         if log_channel:
             try:
@@ -506,13 +547,12 @@ async def process_api_call(message: types.Message, api_type: str, input_data: st
                         await bot.send_document(int(log_channel), FSInputFile(pdf_log_path),
                                                 caption=f"📑 PDF Report for {input_data}")
                         os.unlink(pdf_log_path)
-                    except Exception as e:
-                        logging.error(f"Log PDF generation failed: {e}")
+                    except:
                         with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False, encoding='utf-8') as f:
                             json.dump(raw_data, f, indent=2)
                             log_json = f.name
                         await bot.send_document(int(log_channel), FSInputFile(log_json),
-                                                caption=f"📄 JSON data for {input_data} (PDF failed)")
+                                                caption=f"📄 JSON data for {input_data}")
                         os.unlink(log_json)
             except Exception as e:
                 logging.error(f"Log channel error: {e}")
@@ -730,7 +770,8 @@ async def ask_api_input(callback: types.CallbackQuery, state: FSMContext):
     instructions = prompts.get(api_type, "Enter input")
     await callback.message.answer(
         f"<b>{instructions}</b>\n\n"
-        f"<i>Type /cancel to cancel</i>",
+        f"<i>Type /cancel to cancel</i>\n\n"
+        f"📄 <i>Note: Large responses will be sent as files and split messages</i>",
         parse_mode="HTML",
         reply_markup=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="❌ Cancel", callback_data="cancel_api")]])
     )
